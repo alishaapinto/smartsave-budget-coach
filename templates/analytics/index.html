@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card bg-card p-3">
+      <h5>Monthly Spending Trend</h5>
+      <canvas id="monthly"></canvas>
+    </div>
+  </div>
+  <div class="col-12 col-lg-6">
+    <div class="card bg-card p-3">
+      <h5>Category Breakdown</h5>
+      <canvas id="categories"></canvas>
+    </div>
+  </div>
+  <div class="col-12 mt-3">
+    <div class="card bg-card p-3">
+      <h5>Income vs Expense</h5>
+      <canvas id="incexp"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+fetch('/analytics/monthly.json').then(r=>r.json()).then(data=>{
+  const ctx=document.getElementById('monthly').getContext('2d');
+  new Chart(ctx,{type:'line',data:{labels:data.labels,datasets:[{label:'Expense',data:data.values,backgroundColor:'rgba(79,70,229,0.2)',borderColor:'#4F46E5'}]}});
+});
+fetch('/analytics/categories.json').then(r=>r.json()).then(data=>{
+  const ctx=document.getElementById('categories').getContext('2d');
+  new Chart(ctx,{type:'pie',data:{labels:data.labels,datasets:[{data:data.values,backgroundColor:['#4F46E5','#22C55E','#334155','#64748B','#94A3B8']}]}});
+});
+fetch('/analytics/income-expense.json').then(r=>r.json()).then(data=>{
+  const ctx=document.getElementById('incexp').getContext('2d');
+  new Chart(ctx,{type:'bar',data:{labels:data.labels,datasets:[{label:'Income',data:data.incomes,backgroundColor:'#22C55E'},{label:'Expense',data:data.expenses,backgroundColor:'#EF4444'}]}});
+});
+</script>
+
+{% endblock %}

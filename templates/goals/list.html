@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 d-flex justify-content-between align-items-center">
+    <h4 class="fw-bold mb-0"><i class="bi bi-compass-fill text-success me-2"></i>Savings Goals</h4>
+    <a href="/goals/create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Create Goal</a>
+  </div>
+
+  {% for g in goals %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="card bg-card p-4 h-100 d-flex flex-column">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div>
+          <h5 class="fw-bold mb-1">{{ g.goal_name }}</h5>
+          {% if g.deadline %}
+          <span class="text-muted small"><i class="bi bi-calendar-event me-1"></i>Deadline: {{ g.deadline }}</span>
+          {% endif %}
+        </div>
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-2 py-1" style="font-size:0.8rem;">
+          {{ '%.0f'|format(g.progress()) }}% Saved
+        </span>
+      </div>
+
+      <div class="mt-3">
+        <div class="d-flex justify-content-between small text-muted mb-1">
+          <span>Saved: {{ g.current_amount|inr }}</span>
+          <span>Target: {{ g.target_amount|inr }}</span>
+        </div>
+        <div class="progress" style="height: 12px;">
+          <div class="progress-bar bg-success" role="progressbar" style="width: {{ g.progress() }}%;"></div>
+        </div>
+      </div>
+
+      <!-- Contribute Form -->
+      <form method="post" action="/goals/{{ g.id }}/contribute" class="mt-4 pt-3 border-top border-secondary border-opacity-20 mt-auto">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="form-label text-muted small">Quick Contribute (INR)</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-dark border-secondary text-muted">₹</span>
+          <input name="amount" type="number" step="0.01" placeholder="0.00" class="form-control" required>
+          <button class="btn btn-success"><i class="bi bi-piggy-bank-fill me-1"></i>Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="card bg-card p-5 text-center text-muted">
+      <i class="bi bi-compass fs-1 d-block mb-3 text-muted"></i>
+      <h5 class="fw-semibold">No active savings goals</h5>
+      <p class="small mb-4 text-muted">Set up a goal to track your milestone accomplishments and earn badges.</p>
+      <a href="/goals/create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Create First Goal</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

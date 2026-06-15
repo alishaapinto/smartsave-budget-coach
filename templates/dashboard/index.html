@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4">
+  <!-- Top Stats Grid -->
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card bg-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="text-muted mb-0">Total Income</h6>
+        <div class="p-2 bg-success bg-opacity-10 rounded-3 text-success">
+          <i class="bi bi-wallet2 fs-4"></i>
+        </div>
+      </div>
+      <h3 class="text-success fw-bold mb-0">{{ total_income|inr }}</h3>
+    </div>
+  </div>
+  
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card bg-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="text-muted mb-0">Total Expenses</h6>
+        <div class="p-2 bg-danger bg-opacity-10 rounded-3 text-danger">
+          <i class="bi bi-cart-dash fs-4"></i>
+        </div>
+      </div>
+      <h3 class="text-danger fw-bold mb-0">{{ total_expense|inr }}</h3>
+    </div>
+  </div>
+  
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card bg-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="text-muted mb-0">Net Balance</h6>
+        <div class="p-2 bg-primary bg-opacity-10 rounded-3 text-primary">
+          <i class="bi bi-bank fs-4"></i>
+        </div>
+      </div>
+      <h3 class="fw-bold mb-0 {% if balance >= 0 %}text-info{% else %}text-warning{% endif %}">{{ balance|inr }}</h3>
+    </div>
+  </div>
+  
+  <div class="col-12 col-md-6 col-lg-3">
+    <div class="card bg-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="text-muted mb-0">Daily Streak</h6>
+        <div class="streak-fire-container">
+          <span class="streak-fire">🔥</span>
+        </div>
+      </div>
+      <h3 class="fw-bold mb-1">{{ streak.current_streak }} {% if streak.current_streak == 1 %}day{% else %}days{% endif %}</h3>
+      <div>
+        {% if streak.current_streak >= 15 %}
+          <span class="badge bg-warning text-dark"><i class="bi bi-trophy-fill"></i> Savings Legend</span>
+        {% elif streak.current_streak >= 8 %}
+          <span class="badge bg-info"><i class="bi bi-award-fill"></i> Gold Saver</span>
+        {% elif streak.current_streak >= 3 %}
+          <span class="badge bg-light text-dark"><i class="bi bi-shield-fill"></i> Silver Saver</span>
+        {% else %}
+          <span class="badge bg-secondary"><i class="bi bi-star-fill"></i> Bronze Saver</span>
+        {% endif %}
+        <span class="text-muted ms-2" style="font-size:0.8rem;">(Max: {{ streak.longest_streak }}d)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Section -->
+  <div class="col-12">
+    <div class="card bg-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart-fill text-indigo-400 me-2"></i>Monthly Budget Status</h5>
+        <a href="/budgets" class="btn btn-sm btn-outline-primary"><i class="bi bi-gear-fill"></i> Manage Budget</a>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span>Budget Limit: <strong>{{ budget_amount|inr }}</strong></span>
+        <span>Remaining: <strong class="{% if remaining < 0 %}text-danger{% else %}text-success{% endif %}">{{ remaining|inr }}</strong></span>
+      </div>
+      <div class="progress" style="height: 24px;">
+        <div class="progress-bar {% if usage_pct >= 100 %}bg-danger{% elif usage_pct >= 80 %}bg-warning{% else %}bg-primary{% endif %}" 
+             role="progressbar" 
+             style="width: {{ usage_pct }}%; font-weight:600; font-size:0.9rem;" 
+             aria-valuenow="{{ usage_pct }}" 
+             aria-valuemin="0" 
+             aria-valuemax="100">
+          {{ '%.1f'|format(usage_pct) }}% Used
+        </div>
+      </div>
+      {% if usage_pct >= 100 %}
+      <div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-danger mt-3 mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-octagon-fill"></i>
+        <span><strong>Alert:</strong> You have exceeded your budget for this month! Consider logging only essential emergency expenses.</span>
+      </div>
+      {% elif usage_pct >= 80 %}
+      <div class="alert alert-warning border-0 bg-warning bg-opacity-10 text-warning mt-3 mb-0 d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span><strong>Warning:</strong> You have used over 80% of your monthly budget. Watch your next transactions closely.</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Savings Goals -->
+  <div class="col-12 col-lg-6">
+    <div class="card bg-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0"><i class="bi bi-compass-fill text-success me-2"></i>Savings Goals</h5>
+        <a href="/goals/create" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Create Goal</a>
+      </div>
+      <div class="d-flex flex-column gap-3">
+        {% for g in goals %}
+        <div class="border-bottom border-secondary border-opacity-20 pb-3 last-no-border">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="fw-semibold">{{ g.goal_name }}</span>
+            <span class="text-muted" style="font-size:0.9rem;">{{ g.current_amount|inr }} / {{ g.target_amount|inr }}</span>
+          </div>
+          <div class="progress" style="height: 12px;">
+            <div class="progress-bar bg-success" style="width: {{ g.progress() }}%"></div>
+          </div>
+          {% if g.deadline %}
+          <div class="text-muted mt-1" style="font-size:0.75rem;"><i class="bi bi-calendar-event me-1"></i>Deadline: {{ g.deadline }}</div>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+          <span>No active savings goals found.</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Achievements / Gamification -->
+  <div class="col-12 col-lg-6">
+    <div class="card bg-card p-4 h-100">
+      <h5 class="fw-bold mb-3"><i class="bi bi-trophy-fill text-warning me-2"></i>Achievements & Badges</h5>
+      <div class="d-flex gap-2 flex-wrap mb-4">
+        {% for b in badges %}
+          <span class="badge-premium">
+            <i class="bi bi-patch-check-fill text-indigo-400"></i> {{ b.badge_name }}
+          </span>
+        {% else %}
+          <div class="text-muted w-100 py-3 text-center">
+            <i class="bi bi-bookmark-star fs-3 d-block mb-1"></i>
+            <span>Register details or save money to earn your first badge!</span>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="card bg-opacity-10 bg-white border-0 p-3 rounded-3 mt-auto">
+        <div class="d-flex gap-3 align-items-center">
+          <span class="fs-2">💡</span>
+          <div>
+            <h6 class="mb-1 fw-bold">Coach Motivation</h6>
+            <em class="text-muted">"{{ motivation }}"</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="col-12">
+    <div class="card bg-card p-4">
+      <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill text-indigo-400 me-2"></i>Monthly Spending Trend</h5>
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const monthlyData = {{ monthly_data|tojson }};
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+  
+  // Custom styled Chart.js configuration
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: monthlyData.map(d => d.month),
+      datasets: [{
+        label: 'Expenses (INR)',
+        data: monthlyData.map(d => d.expense),
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99, 102, 241, 0.08)',
+        borderWidth: 3,
+        pointBackgroundColor: '#818cf8',
+        pointBorderColor: '#fff',
+        pointHoverRadius: 7,
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#94a3b8', font: { family: 'Outfit', size: 12 } }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#94a3b8', font: { family: 'Outfit' } }
+        },
+        y: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#94a3b8', font: { family: 'Outfit' } }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
